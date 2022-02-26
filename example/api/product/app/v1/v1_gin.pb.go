@@ -20,19 +20,10 @@ type BlogServiceHTTPServer interface {
 	GetArticles(context.Context, *GetArticlesReq) (*GetArticlesResp, error)
 }
 
-func RegisterBlogServiceHTTPServer(r gin.IRouter, srv BlogServiceHTTPServer) {
-	s := BlogService{
-		server: srv,
-		router: r,
-		resp:   defaultBlogServiceResp{},
-	}
-	s.RegisterService()
-}
-
 type BlogService struct {
-	server BlogServiceHTTPServer
-	router gin.IRouter
-	resp   interface {
+	Server BlogServiceHTTPServer
+	Router gin.IRouter
+	Resp   interface {
 		Error(ctx *gin.Context, err error)
 		ParamsError(ctx *gin.Context, err error)
 		Success(ctx *gin.Context, data interface{})
@@ -40,25 +31,20 @@ type BlogService struct {
 }
 
 // Resp 返回值
-type defaultBlogServiceResp struct{}
-
-func (resp defaultBlogServiceResp) response(ctx *gin.Context, status, code int, msg string, data interface{}) {
-	ctx.JSON(status, map[string]interface{}{
-		"code": code,
-		"msg":  msg,
-		"data": data,
-	})
-}
+type DefaultBlogServiceResp struct{}
 
 // Error 返回错误信息
-func (resp defaultBlogServiceResp) Error(ctx *gin.Context, err error) {
+func (resp DefaultBlogServiceResp) Error(ctx *gin.Context, err error) {
 	code := -1
 	status := 500
 	msg := "未知错误"
 
 	if err == nil {
 		msg += ", err is nil"
-		resp.response(ctx, status, code, msg, nil)
+		ctx.JSON(status, map[string]interface{}{
+			"code": code,
+			"msg":  msg,
+		})
 		return
 	}
 
@@ -77,30 +63,37 @@ func (resp defaultBlogServiceResp) Error(ctx *gin.Context, err error) {
 
 	_ = ctx.Error(err)
 
-	resp.response(ctx, status, code, msg, nil)
+	ctx.JSON(status, map[string]interface{}{
+		"code": code,
+		"msg":  msg,
+	})
 }
 
 // ParamsError 参数错误
-func (resp defaultBlogServiceResp) ParamsError(ctx *gin.Context, err error) {
+func (resp DefaultBlogServiceResp) ParamsError(ctx *gin.Context, err error) {
 	_ = ctx.Error(err)
-	resp.response(ctx, 400, 400, "参数错误", nil)
+	ctx.JSON(400, map[string]interface{}{
+		"code": 400,
+		"msg":  "参数错误",
+	})
 }
 
 // Success 返回成功信息
-func (resp defaultBlogServiceResp) Success(ctx *gin.Context, data interface{}) {
-	resp.response(ctx, 200, 0, "成功", data)
+func (resp DefaultBlogServiceResp) Success(ctx *gin.Context, data interface{}) {
+	// resp需要定义code，为了让code和数据平级
+	ctx.JSON(200, data)
 }
 
-func (s *BlogService) GetArticles_0(ctx *gin.Context) {
+func (s *BlogService) GetArticles(ctx *gin.Context) {
 	var in GetArticlesReq
 
 	if err := ctx.ShouldBindUri(&in); err != nil {
-		s.resp.ParamsError(ctx, err)
+		s.Resp.ParamsError(ctx, err)
 		return
 	}
 
 	if err := ctx.ShouldBindQuery(&in); err != nil {
-		s.resp.ParamsError(ctx, err)
+		s.Resp.ParamsError(ctx, err)
 		return
 	}
 
@@ -109,47 +102,25 @@ func (s *BlogService) GetArticles_0(ctx *gin.Context) {
 		md.Set(k, v...)
 	}
 	newCtx := metadata.NewIncomingContext(ctx, md)
-	out, err := s.server.(BlogServiceHTTPServer).GetArticles(newCtx, &in)
+	out, err := s.Server.(BlogServiceHTTPServer).GetArticles(newCtx, &in)
 	if err != nil {
-		s.resp.Error(ctx, err)
+		s.Resp.Error(ctx, err)
 		return
 	}
 
-	s.resp.Success(ctx, out)
+	s.Resp.Success(ctx, out)
 }
 
-func (s *BlogService) GetArticles_1(ctx *gin.Context) {
-	var in GetArticlesReq
-
-	if err := ctx.ShouldBindQuery(&in); err != nil {
-		s.resp.ParamsError(ctx, err)
-		return
-	}
-
-	md := metadata.New(nil)
-	for k, v := range ctx.Request.Header {
-		md.Set(k, v...)
-	}
-	newCtx := metadata.NewIncomingContext(ctx, md)
-	out, err := s.server.(BlogServiceHTTPServer).GetArticles(newCtx, &in)
-	if err != nil {
-		s.resp.Error(ctx, err)
-		return
-	}
-
-	s.resp.Success(ctx, out)
-}
-
-func (s *BlogService) CreateArticle_0(ctx *gin.Context) {
+func (s *BlogService) CreateArticle(ctx *gin.Context) {
 	var in Article
 
 	if err := ctx.ShouldBindUri(&in); err != nil {
-		s.resp.ParamsError(ctx, err)
+		s.Resp.ParamsError(ctx, err)
 		return
 	}
 
 	if err := ctx.ShouldBindJSON(&in); err != nil {
-		s.resp.ParamsError(ctx, err)
+		s.Resp.ParamsError(ctx, err)
 		return
 	}
 
@@ -158,21 +129,11 @@ func (s *BlogService) CreateArticle_0(ctx *gin.Context) {
 		md.Set(k, v...)
 	}
 	newCtx := metadata.NewIncomingContext(ctx, md)
-	out, err := s.server.(BlogServiceHTTPServer).CreateArticle(newCtx, &in)
+	out, err := s.Server.(BlogServiceHTTPServer).CreateArticle(newCtx, &in)
 	if err != nil {
-		s.resp.Error(ctx, err)
+		s.Resp.Error(ctx, err)
 		return
 	}
 
-	s.resp.Success(ctx, out)
-}
-
-func (s *BlogService) RegisterService() {
-
-	s.router.Handle("GET", "/v1/author/:author_id/articles", s.GetArticles_0)
-
-	s.router.Handle("GET", "/v1/articles", s.GetArticles_1)
-
-	s.router.Handle("POST", "/v1/author/:author_id/articles", s.CreateArticle_0)
-
+	s.Resp.Success(ctx, out)
 }

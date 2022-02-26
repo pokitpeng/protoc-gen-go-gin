@@ -10,10 +10,7 @@ import "google/api/annotations.proto";
 service BlogService {
 	rpc GetArticles(GetArticlesReq) returns (GetArticlesResp) {
 		option (google.api.http) = {
-			get: "/v1/articles"
-			additional_bindings {
-				get: "/v1/author/{author_id}/articles"
-			}
+			get: "/v1/author/{author_id}/articles"
 		};
 	}
 

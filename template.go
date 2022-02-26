@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"html/template"
 	"strings"
 )
@@ -58,7 +57,8 @@ type method struct {
 
 // HandlerName for gin handler name
 func (m *method) HandlerName() string {
-	return fmt.Sprintf("%s_%d", m.Name, m.Num)
+	// return fmt.Sprintf("%s_%d", m.Name, m.Num)
+	return m.Name
 }
 
 // HasPathParams 是否包含路由参数
