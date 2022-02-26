@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jpillora/overseer"
 	"github.com/jpillora/overseer/fetcher"
-	v1 "github.com/mohuishou/protoc-gen-go-gin/example/api/product/app/v1"
-	"github.com/mohuishou/protoc-gen-go-gin/example/api/product/ecode"
+	v1 "github.com/pengpeng/protoc-gen-go-gin/example/api/product/app/v1"
+	"github.com/pengpeng/protoc-gen-go-gin/example/api/product/ecode"
 )
 
 type service struct {

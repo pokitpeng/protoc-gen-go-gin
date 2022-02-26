@@ -1,4 +1,4 @@
-module github.com/mohuishou/protoc-gen-go-gin
+module github.com/pengpeng/protoc-gen-go-gin
 
 go 1.16
 
